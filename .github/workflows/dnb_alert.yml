@@ -1,0 +1,36 @@
+name: Run DNB Scraper
+
+on:
+  schedule:
+    # Runs at 06:30 UTC (08:30 Norwegian Summer Time) every Monday through Friday
+    - cron: '30 6 * * 1-5'
+  workflow_dispatch: # Allows you to trigger it manually anytime with a button click
+
+permissions:
+  issues: write  # Grants the workflow permission to post issues in your repo
+
+jobs:
+  scrape_and_notify:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Scraping Packages
+      run: |
+        pip install requests beautifulsoup4
+
+    - name: Run Scraper Script
+      run: python scraper.py
+
+    - name: Open Notification Issue
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Creates a native GitHub issue containing your morning updates
+        gh issue create --title "DNB Market Updates ($(date +'%d.%m.%Y'))" --body-file alert_body.md

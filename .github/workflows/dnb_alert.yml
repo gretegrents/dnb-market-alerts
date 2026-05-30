@@ -12,13 +12,15 @@ jobs:
   scrape_and_deploy:
     runs-on: ubuntu-latest
     steps:
+    # 1. Upgraded to v6 to support the Node 24 runtime
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         persist-credentials: true
 
+    # 2. Upgraded to v6 to support the Node 24 runtime
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.10'
 
@@ -34,7 +36,7 @@ jobs:
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         
-        # Explicit authentication injection patch:
+        # Explicit authentication injection patch
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
         
         git add index.html

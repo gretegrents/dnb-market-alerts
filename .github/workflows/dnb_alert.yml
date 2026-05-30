@@ -2,19 +2,20 @@ name: Run DNB Scraper
 
 on:
   schedule:
-    # Runs at 06:30 UTC (08:30 Norwegian Summer Time) every Monday through Friday
     - cron: '30 6 * * 1-5'
-  workflow_dispatch: # Allows you to trigger it manually anytime with a button click
+  workflow_dispatch:
 
 permissions:
-  issues: write  # Grants the workflow permission to post issues in your repo
+  contents: write  # Grants write permission to the workflow
 
 jobs:
-  scrape_and_notify:
+  scrape_and_deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -28,9 +29,14 @@ jobs:
     - name: Run Scraper Script
       run: python scraper.py
 
-    - name: Open Notification Issue
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Commit and Push Webpage
       run: |
-        # Creates a native GitHub issue containing your morning updates
-        gh issue create --title "DNB Market Updates ($(date +'%d.%m.%Y'))" --body-file alert_body.md
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # Explicit authentication injection patch:
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        
+        git add index.html
+        git commit -m "Automated update of DNB market insight dashboard" || echo "No layout changes found."
+        git push origin main
